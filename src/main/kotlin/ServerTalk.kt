@@ -1,5 +1,5 @@
+import ServerTalk.Companion.port_B
 import java.io.IOException
-import java.io.OutputStream
 import java.net.ServerSocket
 import java.net.Socket
 import javax.sound.sampled.*
@@ -9,15 +9,17 @@ import javax.swing.JLabel
 import javax.swing.JSpinner
 import kotlin.system.exitProcess
 
-
+fun main() {
+    ServerTalk()
+}
 class ServerTalk {
     companion object {
         @JvmStatic
-        lateinit var connectBtn: JButton
-        lateinit var disconnectBtn: JButton
-        lateinit var statusLbl: JLabel
-        lateinit var portSpinner: JSpinner
-        lateinit var portLbl: JLabel
+        lateinit var connect_B: JButton
+        lateinit var disconnect_B: JButton
+        lateinit var statusL: JLabel
+        lateinit var port_B: JSpinner
+        lateinit var port_L: JLabel
         @Throws(IOException::class, LineUnavailableException::class)
         fun connect() {
             val thread: Thread = Send()
@@ -25,94 +27,75 @@ class ServerTalk {
         }
 
         fun disconnect() {
-
-            //frame.dispose();
             exitProcess(0)
         }
 
-        @JvmStatic
-        fun main(args: Array<String>) {
-            ServerTalk()
-        }
+
     }
 
     init {
-        val frame = JFrame()
-        connectBtn = JButton("Connect")
-        disconnectBtn = JButton("Disconnect")
-        statusLbl = JLabel("")
-        portSpinner = JSpinner()
-        portLbl = JLabel("PORT :.")
-        //adjust size and set layout
-        frame.pack()
-        frame.setSize(400, 300)
-        frame.layout = null
+        val frame = JFrame("ServerTalk")
+        connect_B = JButton("Connect")
+        disconnect_B = JButton("Disconnect")
+        disconnect_B.addActionListener { disconnect() }
 
-        //action for connect button
-        connectBtn.addActionListener {
+        statusL = JLabel("")
+        port_B = JSpinner()
+        port_L = JLabel("PORT ")
+        frame.layout = null
+        frame.pack()
+        frame.setSize(300, 300)
+        connect_B.addActionListener {
             try {
                 connect()
             } catch (ex: IOException) {
             } catch (ex: LineUnavailableException) {
             }
         }
-        //action for disconnect button
-        disconnectBtn.addActionListener { disconnect() }
+        statusL.setBounds(20, 10, 250, 30)
+        frame.add(statusL)
+        port_B.setBounds(100, 40, 140, 30)
+        frame.add(port_B)
+        port_L.setBounds(60, 40, 100, 30)
+        frame.add(port_L)
+        connect_B.setBounds(45, 85, 200, 60)
+        frame.add(connect_B)
+        disconnect_B.setBounds(45, 150, 200, 60)
+        frame.add(disconnect_B)
 
-        //add components
-        frame.add(connectBtn)
-        frame.add(disconnectBtn)
-        frame.add(statusLbl)
-        frame.add(portSpinner)
-        frame.add(portLbl)
-        //set component bounds ( Absolute Positioning)
-        connectBtn.setBounds(45, 85, 200, 60)
-        disconnectBtn.setBounds(45, 150, 200, 60)
-        statusLbl.setBounds(130, 175, 200, 30)
-        portSpinner.setBounds(160, 40, 60, 30)
-        portLbl.setBounds(100, 40, 60, 30)
+
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         frame.isVisible = true
-        //set defualts
-        portSpinner.value = 8888
+        port_B.value = 8888
     }
 }
 
 internal class Send : Thread() {
     override fun run() {
-        val port = ServerTalk.portSpinner.value as Int
+        val port = port_B.value as Int
         val socket: ServerSocket?
-        //for sending
         val microphone: DataLine?
-        //for recieveing
         val speakers: SourceDataLine
         val client: Socket?
 
         try {
-            //socket stuff starts here
             socket = ServerSocket(port)
-            ServerTalk.statusLbl.text = "Waiting for Connection..."
+            ServerTalk.statusL.text = "Connectiong....."
             client = socket.accept()
-            ServerTalk.statusLbl.text = "Connected!"
-            //socket stuff ends here
-            //outputstream
-            val out: OutputStream? = client.getOutputStream()
-            //outputstream
-            //audioformat
-            val format = AudioFormat(16000f, 8, 2, true, true)
-            //audioformat
-            //selecting and starting microphone
+            ServerTalk.statusL.text = "Connected!"
+            val format = AudioFormat(16000f,
+                8, 2,
+                true, true)
             val info = DataLine.Info(
                 TargetDataLine::class.java,
                 format
             )
+
             microphone = AudioSystem.getLine(info) as TargetDataLine
             microphone.open(format)
             microphone.start()
-
-            //for recieveing
             val `in` = client.getInputStream()
-            //selecting and starting speakers
+
             val dataLineInfo = DataLine.Info(SourceDataLine::class.java, format)
             speakers = AudioSystem.getLine(dataLineInfo) as SourceDataLine
             speakers.open(format)
@@ -122,18 +105,15 @@ internal class Send : Thread() {
             val bufferForOutput = ByteArray(1024)
             var bufferVariableForOutput: Int
 
-            //send/recieve
+
             while (microphone.read(bufferForOutput, 0, 1024).also { bufferVariableForOutput = it } > 0 || `in`.read(
                     bufferForInput
                 ).also { bufferVariableForInput = it } > 0) {
-                if (out != null) {
-                    out.write(bufferForOutput, 0, bufferVariableForOutput)
-                }
+                client.getOutputStream()?.write(bufferForOutput, 0, bufferVariableForOutput)
                 speakers.write(bufferForInput, 0, bufferVariableForInput)
             }
         } catch (e: IOException) {
             e.printStackTrace()
-            //System.out.println("some error occured");
         } catch (e: LineUnavailableException) {
             e.printStackTrace()
         }
