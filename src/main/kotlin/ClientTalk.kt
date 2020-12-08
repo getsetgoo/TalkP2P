@@ -7,9 +7,9 @@ import javax.swing.*
     ClientTalk()
     }
 
-class ClientTalk {
+  class ClientTalk {
     companion object {
-        lateinit var disconnectBtn: JButton
+        lateinit var disconnect_B: JButton
         lateinit var connection_status: JLabel
         lateinit var jSpinner: JSpinner
         lateinit var jLabel: JLabel
@@ -25,18 +25,17 @@ class ClientTalk {
 
             System.exit(0)
         }
-
     }
-
     init {
-        val frame = JFrame("TClintTalk")
-        connect_Btn = JButton("Connect")
-        disconnectBtn = JButton("Disconnect")
-        disconnectBtn.addActionListener { Action_Disconnect() }
+        val frame = JFrame("ClintTalk")
+        connect_B = JButton("Connect")
+        disconnect_B = JButton("Disconnect")
+        disconnect_B.addActionListener { Action_Disconnect() }
         connection_status = JLabel("")
         jSpinner = JSpinner()
         jLabel = JLabel("PORT")
         host_Field = JTextField()
+        host_Field.text= "127.0.0.1"
         host_L = JLabel("HOST")
 
         //adjust size and set layout
@@ -45,14 +44,13 @@ class ClientTalk {
         frame.layout = null
 
         //action for connect button
-        connect_Btn.addActionListener {
+        connect_B.addActionListener {
             try {
                 connect()
             } catch (ex: IOException) {
             } catch (ex: LineUnavailableException) {
             }
         }
-
 
         frame.add(jSpinner)
         jSpinner.setBounds(80, 72, 115, 30)
@@ -66,11 +64,11 @@ class ClientTalk {
         frame.add(host_L)
         host_L.setBounds(30, 40, 80, 30)
 
-        frame.add(connect_Btn)
-        connect_Btn.setBounds(25, 110, 190, 30)
+        frame.add(connect_B)
+        connect_B.setBounds(25, 110, 190, 30)
 
-        frame.add(disconnectBtn)
-        disconnectBtn.setBounds(25, 150, 190, 30)
+        frame.add(disconnect_B)
+        disconnect_B.setBounds(25, 150, 190, 30)
 
         frame.add(connection_status)
         connection_status.setBounds(20, 10, 250, 30)
@@ -81,7 +79,7 @@ class ClientTalk {
     }
 }
 
-internal class Receive : Thread() {
+ internal class Receive : Thread() {
     override fun run() {
         val port = ClientTalk.jSpinner.value as Int
         val host = ClientTalk.host_Field.text as String //"127.0.0.1";
@@ -113,17 +111,17 @@ internal class Receive : Thread() {
             microphone.open(format)
             microphone.start()
             val bufferForOutput = ByteArray(1024)
-            var bufferVariableForOutput = 0
+            var buffer_Out = 0
             val bufferForInput = ByteArray(1024)
-            var bufferVariableForInput: Int
+            var Buffer_forInput: Int
 
 
             while (`in`.read(bufferForInput)
-                    .also { bufferVariableForInput = it } > 0 || microphone.read(bufferForOutput, 0, 1024)
-                    .also { bufferVariableForOutput = it } > 0
+                    .also { Buffer_forInput = it } > 0 || microphone.read(bufferForOutput, 0, 1024)
+                    .also { buffer_Out = it } > 0
             ) {
-                out.write(bufferForOutput, 0, bufferVariableForOutput)
-                speakers.write(bufferForInput, 0, bufferVariableForInput)
+                out.write(bufferForOutput, 0, buffer_Out)
+                speakers.write(bufferForInput, 0, Buffer_forInput)
             }
         } catch (e: IOException) {
             e.printStackTrace()
@@ -133,4 +131,4 @@ internal class Receive : Thread() {
     }
 }
 
-lateinit var connect_Btn: JButton
+lateinit var connect_B: JButton
